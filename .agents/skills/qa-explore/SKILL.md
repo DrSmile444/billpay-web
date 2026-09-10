@@ -44,6 +44,23 @@ playwright-cli click "Pay bill"          # error: does not match any elements
 playwright-cli find "Pay"                # locate first, then click the ref
 ```
 
+**Refs go stale, and that is the single biggest time sink.** Any re-render or
+navigation invalidates them. A stale ref either errors (`Ref e11 not found`) or,
+worse, acts on a different element and you never notice. Rule: **run `snapshot`
+immediately before every `click`, `fill` or `select`.**
+
+**`open` resets the viewport.** If you resize to a phone width and then call
+`open`, you are measuring at 1280px again and will report "no overflow" on a page
+that overflows. Order is always `open` → `resize` → measure.
+
+Fastest way to read the page after an action:
+
+```bash
+playwright-cli eval "() => document.body.innerText" --raw
+```
+
+Use `--raw` whenever you want greppable output instead of a formatted block.
+
 Identify the core user journeys — the three to five flows that, if broken, make
 the product useless. Walk each one once, end to end, without looking for bugs.
 You cannot recognise wrong behaviour until you know what right looks like.
@@ -54,9 +71,27 @@ Write down the journeys before continuing.
 
 **Round 1 — Functional.** For each journey: action → expected result.
 
-**Round 2 — Adversarial.** Empty input, boundary values, invalid formats, the
-same action twice in quick succession, refresh mid-flow, back and forward
-navigation, keyboard-only operation, loading and error and empty states.
+**Round 2 — Adversarial.** Not a list of nouns — a list of values. Into every
+numeric field: `0`, a negative, `0.005`, `1e3`, `999999999999`, `100,50` with a
+comma, a leading space, and letters. Into **every free-text field**, without
+exception:
+
+```
+<img src=x onerror="window.__x=1">
+```
+
+then check `window.__x` afterwards. That one string finds the defect class that
+matters most in a payments app, and nothing else in this round will prompt you
+to try it.
+
+Then the interaction cases: the same action twice in quick succession, refresh
+mid-flow, back and forward navigation, keyboard-only operation, and loading,
+error and empty states.
+
+**If a screen aggregates records, combine records that differ** — different
+currency, different status, different number of child rows. Totals and summaries
+break on mixed input far more often than on uniform input, and a screen full of
+identical fixtures will never show it.
 
 **Round 3 — Coverage gaps.** Accessibility, mobile viewport, console output,
 failed network calls, visual consistency between neighbouring screens.
@@ -67,20 +102,30 @@ Merge into one numbered plan. Then execute it — do not keep re-planning.
 
 Work top-down. Everything you can measure, measure. Vision is the last rung.
 
-| Question                                      | Command                                                                                                                                                                       |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Did anything throw?                           | `playwright-cli console`                                                                                                                                                      |
-| Did a request fail, or fire twice?            | `playwright-cli requests` then `request <n>`                                                                                                                                  |
-| What did the server actually return?          | `playwright-cli response-body <n>`                                                                                                                                            |
-| Size, font, spacing, colour of an element     | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h:r.height, w:r.width, fontSize:s.fontSize, gap:s.gap}; }" <ref>` |
-| Is the control reachable and correctly named? | `playwright-cli snapshot` — check role and accessible name                                                                                                                    |
-| Does it survive a phone viewport?             | `playwright-cli resize 375 812` then re-measure                                                                                                                               |
-| What happens on a server error?               | `playwright-cli route "<path>" --status 500` — see the note below                                                                                                             |
-| What happens with no network?                 | `playwright-cli network-state-set offline`                                                                                                                                    |
-| Does the page look right?                     | `playwright-cli screenshot` — judgment, last resort                                                                                                                           |
+| Question                                      | Command                                                                                                                                                                                                                                                                                                       |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Did anything throw?                           | `playwright-cli console`                                                                                                                                                                                                                                                                                      |
+| Did a request fail, or fire twice?            | `playwright-cli requests` then `request <n>`                                                                                                                                                                                                                                                                  |
+| What did the server actually return?          | `playwright-cli response-body <n>`                                                                                                                                                                                                                                                                            |
+| **Does the screen match the data?**           | compare `response-body <n>` field by field against `eval "() => document.body.innerText" --raw`                                                                                                                                                                                                               |
+| Size, font, spacing of an element             | `playwright-cli eval "() => { const el = document.querySelector('<css>'); const r = el.getBoundingClientRect(); const s = getComputedStyle(el); const p = getComputedStyle(el.parentElement); return {h:r.height, w:r.width, right:r.right, fontSize:s.fontSize, parentGap:p.gap, parentWrap:p.flexWrap}; }"` |
+| Is the control reachable and correctly named? | `playwright-cli snapshot` — check role and accessible name                                                                                                                                                                                                                                                    |
+| Does it survive a phone viewport?             | `playwright-cli resize 375 812` then re-measure                                                                                                                                                                                                                                                               |
+| What happens on a server error?               | `playwright-cli route "<path>" --status 500` — see the note below                                                                                                                                                                                                                                             |
+| What happens with no network?                 | `playwright-cli network-state-set offline`                                                                                                                                                                                                                                                                    |
+| Does the page look right?                     | `playwright-cli screenshot` — judgment, last resort                                                                                                                                                                                                                                                           |
 
 A misaligned button is a measurement, not an impression. A duplicated request is
 a network entry, not a suspicion.
+
+**Prefer a CSS selector over a ref inside `eval`.** `eval "<fn>" <ref>` is
+fragile even on a ref a fresh snapshot just produced; `eval "() =>
+document.querySelector('…')…"` is reliable.
+
+**The highest-yield technique in this list is the API-versus-DOM comparison.**
+Read what the endpoint returned, then read what the screen shows, and compare
+field by field. Wrong totals, wrong dates, values stored at a precision the UI
+does not display — all of them surface here and nowhere else.
 
 ### Traps that will cost you time
 
@@ -152,11 +197,11 @@ the screen.
 
 One defect per ticket. Title states the symptom, not the guess.
 
-```
-[Screen][Browser] Short factual symptom
+State the environment **once at the top of your report** — browser, OS,
+viewport, build, timezone — and keep each defect block light:
 
-Environment
-- browser + version, OS, viewport, URL/build
+```
+[Screen][Severity] Short factual symptom
 
 Preconditions
 - what must exist first
@@ -185,9 +230,11 @@ Evidence
 If you cannot state Expected with a reason, you have a question, not a defect.
 Ask it instead of filing it.
 
-## 7. Turn the important ones into tests
+## 7. Turn the important ones into tests (optional)
 
-For defects that must never return, record the flow and keep the generated code:
+Skip this while you are hunting; come back to it once a defect is confirmed and
+someone has decided it must never return. Then record the flow and keep the
+generated code:
 
 ```bash
 playwright-cli recording-start

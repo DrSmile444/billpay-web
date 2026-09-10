@@ -70,10 +70,14 @@ pass; each round exists to catch what the previous one missed.
 **Round 1 — Functional.** For each affected surface: action → expected result.
 Cover the acceptance scenarios from the spec verbatim where they exist.
 
-**Round 2 — Adversarial.** Re-read round 1 and ask what a hostile user does:
-empty values, boundary values, invalid input, the same action twice quickly,
-back/forward navigation, refresh mid-flow, keyboard-only interaction, loading
-and error and empty states.
+**Round 2 — Adversarial.** Re-read round 1 and use concrete values, not
+categories. Into every numeric field: `0`, a negative, `0.005`, `1e3`,
+`999999999999`, `100,50`, a leading space, letters. Into every free-text field:
+`<img src=x onerror="window.__x=1">`, then check `window.__x`. Then the
+interaction cases: the same action twice quickly, back/forward navigation,
+refresh mid-flow, keyboard-only interaction, loading and error and empty states.
+If the change touches a screen that aggregates records, combine records that
+differ — currency, status, number of child rows.
 
 **Round 3 — Coverage gaps.** Re-read rounds 1-2 and ask what neither covers:
 accessibility, mobile viewport, console output, failed network calls, visual
@@ -99,21 +103,41 @@ playwright-cli click "Show paid bills"   # error: does not match any elements
 playwright-cli find "Show paid"          # use find to locate, then click its ref
 ```
 
+**Refs go stale on any re-render or navigation.** A stale ref either errors or
+acts on the wrong element silently. Run `snapshot` immediately before every
+`click`, `fill` or `select`.
+
+**`open` resets the viewport**, so a resize done before it is lost — you will
+measure at desktop width and report no overflow on a page that overflows. Order:
+`open` → `resize` → measure.
+
+To read the page quickly after an action:
+
+```bash
+playwright-cli eval "() => document.body.innerText" --raw
+```
+
 Work down this ladder. Every rung you can answer with a measurement, you MUST
 answer with a measurement. Visual judgment is the last resort, never the first.
 
-| Question                                         | Command                                                                                                                                                                           | Kind            |
-| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| Did anything throw?                              | `playwright-cli console`                                                                                                                                                          | deterministic   |
-| Did a request fail?                              | `playwright-cli requests`, `request <n>`                                                                                                                                          | deterministic   |
-| What did the API return?                         | `playwright-cli response-body <n>`                                                                                                                                                | deterministic   |
-| Is this element the right size / font / spacing? | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h: r.height, w: r.width, fontSize: s.fontSize, gap: s.gap}; }" <ref>` | deterministic   |
-| Does it work on a phone?                         | `playwright-cli resize 375 812` then re-measure                                                                                                                                   | deterministic   |
-| Is the control reachable and named?              | `playwright-cli snapshot` — check role and accessible name                                                                                                                        | deterministic   |
-| How does it behave offline / on a 500?           | `playwright-cli network-state-set offline`; for a forced error see the note below                                                                                                 | deterministic   |
-| Does the page _look_ right?                      | `playwright-cli screenshot`                                                                                                                                                       | judgment — last |
+| Question                                         | Command                                                                                                                                                                                                                                                                                                                                 | Kind            |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Did anything throw?                              | `playwright-cli console`                                                                                                                                                                                                                                                                                                                | deterministic   |
+| Did a request fail?                              | `playwright-cli requests`, `request <n>`                                                                                                                                                                                                                                                                                                | deterministic   |
+| What did the API return?                         | `playwright-cli response-body <n>`                                                                                                                                                                                                                                                                                                      | deterministic   |
+| **Does the screen match that data?**             | compare the response body field by field against `eval "() => document.body.innerText" --raw`                                                                                                                                                                                                                                           | deterministic   |
+| Is this element the right size / font / spacing? | `playwright-cli eval "() => { const el = document.querySelector('<css>'); const r = el.getBoundingClientRect(); const p = getComputedStyle(el.parentElement); return {h:r.height, right:r.right, fontSize:getComputedStyle(el).fontSize, parentGap:p.gap, parentWrap:p.flexWrap}; }"` — a CSS selector is more reliable here than a ref | deterministic   |
+| Does it work on a phone?                         | `playwright-cli resize 375 812` then re-measure                                                                                                                                                                                                                                                                                         | deterministic   |
+| Is the control reachable and named?              | `playwright-cli snapshot` — check role and accessible name                                                                                                                                                                                                                                                                              | deterministic   |
+| How does it behave offline / on a 500?           | `playwright-cli network-state-set offline`; for a forced error see the note below                                                                                                                                                                                                                                                       | deterministic   |
+| Does the page _look_ right?                      | `playwright-cli screenshot`                                                                                                                                                                                                                                                                                                             | judgment — last |
 
 Never ask a model whether a button is 44px tall. Measure it.
+
+The comparison rung is the one people skip and the one that pays best: read what
+the endpoint returned, read what the screen renders, and diff them field by
+field. Wrong totals, off-by-one dates and values stored at a precision the UI
+hides all surface there and nowhere else.
 
 ### Four traps that cost people the most time
 
