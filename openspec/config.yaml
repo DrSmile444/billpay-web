@@ -1,0 +1,78 @@
+schema: spec-driven
+
+context: |
+  BillPay Web — a browser-only React front-end for a bill-payment flow
+  (bills list -> bill detail -> pay -> receipt, plus a "new bill" form).
+
+  IMPORTANT: this repository is a QA training playground. It deliberately
+  contains planted defects (functional, visual, accessibility, security).
+  Do not "fix" behaviour you were not asked to change, and do not treat the
+  existing code as a reference implementation. Scope every change to what the
+  proposal asks for.
+
+  Stack
+  - React 19 + React DOM 19, function components and hooks only
+  - TypeScript ~6.0 (strict), ESM ("type": "module")
+  - Vite 8 (base: '/billpay-web/' — the app is served from a GitHub Pages subpath)
+  - React Router 7, HASH routing (#/bills/:id) so deep links survive Pages
+  - MSW v2 as a service worker — there is NO backend. Every /api/* call is a
+    real fetch answered by src/mocks/handlers.ts against in-memory state in
+    src/mocks/db.ts. State resets on page reload.
+  - ESLint 10 (flat config, eslint.config.js) + Prettier 3
+  - No test runner is installed. There is no unit/e2e suite in this repo.
+    Verification is done in a real browser (see the ready-for-qa skill).
+
+  Layout
+  - src/screens/   one file per route (BillsList, BillDetail, NewBill, ReceiptScreen)
+  - src/api/       fetch wrapper (client.ts)
+  - src/mocks/     MSW worker, handlers, in-memory db
+  - src/lib/       pure helpers (format.ts)
+  - src/types.ts   shared domain types
+
+  API contract (mirrors the NestJS billpay-lab service)
+  GET  /api/bills            POST /api/bills
+  GET  /api/bills/:id        GET  /api/bills/:id/history
+  POST /api/bills/:id/pay    (accepts an Idempotency-Key header)
+  GET  /api/bills/:id/receipt
+
+  Quality bar — commands that pass on main today (verified 2026-09-10, run them,
+  do not assume):
+    npm run lint     # eslint . (ESLint 10 flat config) — clean, ~1.4s
+    npm run build    # tsc -b && vite build — clean, ~1.2s
+    npx prettier --check "src/**/*.{ts,tsx,css}"   # clean
+
+  Of these, `npm run lint` and `npm run build` are the only ones actually
+  enforced in CI (.github/workflows/deploy.yml runs them on every push to main
+  before publishing to GitHub Pages). Prettier is not enforced anywhere.
+
+  Known caveat, do not paper over it: `npm run format:check` (prettier over the
+  whole repo) FAILS on main today on five committed Markdown files (README.md
+  and the four skill SKILL.md files). That is pre-existing and out of scope for
+  feature changes. Check formatting of source with the scoped prettier command
+  above instead, and never reformat the skill files as a side effect.
+
+  Also note: .oxlintrc.json exists in the repo but oxlint is NOT installed and
+  no script runs it. The real linter is ESLint. Do not invent an `npm run
+  oxlint` gate.
+
+  Browser verification is the real gate. Playwright MCP is preconfigured in
+  .mcp.json; the playwright-cli binary is NOT installed by default — get it with
+  `npx @playwright/cli@latest install --skills`.
+
+rules:
+  proposal:
+    - "State the user-visible behaviour change in one sentence before any implementation detail."
+    - "Include a Non-goals section. Explicitly say that the repo's planted training defects are out of scope unless the change is specifically about one of them."
+    - "Name every screen, route and MSW handler the change touches. If it touches none, say so."
+  design:
+    - "Only write a design document when the change adds state, a new route, or a new API interaction. Small UI-only changes do not need one."
+    - "If the change affects data returned by /api/*, say whether the MSW handler in src/mocks/handlers.ts changes, and whether in-memory state in src/mocks/db.ts changes."
+  specs:
+    - "Every requirement MUST have at least one acceptance scenario written as an explicit Given / When / Then block. A requirement with no Given-When-Then scenario is incomplete and must be rejected."
+    - "Write scenarios against observable browser behaviour (what is rendered, what request is sent, what status comes back) — not against internal function calls."
+    - "Cover the empty, loading and error state of any list or fetch the requirement introduces."
+  tasks:
+    - "The final task of every change MUST be: run the repo's ready-for-qa skill (.claude/skills/ready-for-qa/SKILL.md) against a running dev server (npm run dev) and produce its handoff report. A change is not done until that report exists and reports no unresolved failures."
+    - "Include an explicit task to run `npm run lint` and `npm run build` and record that both pass."
+    - "Keep tasks to at most ~2 hours of work each; split anything larger."
+    - "Do not add a task that fixes an unrelated pre-existing defect. Log it instead."
