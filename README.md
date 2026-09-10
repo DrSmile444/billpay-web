@@ -26,8 +26,13 @@ npx @playwright/cli@latest install --skills=agents   # Codex/others -> .agents/s
 
 It reuses an installed Chrome, so there is no separate browser download.
 
-**Playwright MCP** is already configured in `.mcp.json`, so Claude Code picks it up on
-open. For Codex, add it with `codex mcp`.
+**Playwright MCP.** Claude Code picks it up from the committed `.mcp.json` when you
+open the repo — nothing to do. **Codex does not read `.mcp.json`**; its MCP config is
+global, so add the server once:
+
+```bash
+codex mcp add playwright -- npx -y @playwright/mcp@latest
+```
 
 **Workshop skills** ship in this repo for both agents:
 
