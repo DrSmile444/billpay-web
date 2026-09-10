@@ -6,6 +6,36 @@ A small React front-end for a bill-payment flow: list bills, open a bill, pay it
 
 > ⚠️ **This is a QA training playground.** The application contains deliberate defects — functional, visual, accessibility and security. Do not use any of this code as a reference implementation, and do not copy it into a real product. The defects are not listed here on purpose: finding them is the exercise.
 
+## Setup for the workshop
+
+Clone the repo. Everything an agent needs is already committed — nothing else to configure.
+
+```bash
+git clone https://github.com/DrSmile444/billpay-web.git
+cd billpay-web
+npm install          # only needed for the developer exercise; QA testing needs the live URL only
+```
+
+**Browser control for your agent.** Install the official Playwright skill, which teaches
+the agent to drive a real browser, read the console and network, and measure elements:
+
+```bash
+npx @playwright/cli@latest install --skills          # Claude Code  -> .claude/skills/
+npx @playwright/cli@latest install --skills=agents   # Codex/others -> .agents/skills/
+```
+
+It reuses an installed Chrome, so there is no separate browser download.
+
+**Playwright MCP** is already configured in `.mcp.json`, so Claude Code picks it up on
+open. For Codex, add it with `codex mcp`.
+
+**Workshop skills** ship in this repo for both agents:
+
+| Skill | Use it for |
+| --- | --- |
+| `qa-explore` | Testing the running app: explore, prove a defect, capture evidence, write the ticket |
+| `ready-for-qa` | Before handing your own change to QA: spec check, runtime verification, handoff report |
+
 ## What it is
 
 A browser-only application. There is no backend to install or run: every HTTP call is intercepted by
