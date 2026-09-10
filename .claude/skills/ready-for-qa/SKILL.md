@@ -12,12 +12,33 @@ change works in a running browser before a human tester ever opens it.
 Do not skip steps because the change "looks small". The cost of this skill is a
 few minutes; the cost of a QA round-trip on an obvious defect is a day.
 
-## 1. Identify what changed
+## 0. Install the browser driver
+
+The commands below need `playwright-cli`. Install it and its agent skill once:
 
 ```bash
-git diff --stat $(git merge-base HEAD origin/HEAD)...HEAD
-git diff $(git merge-base HEAD origin/HEAD)...HEAD
+npx @playwright/cli@latest install --skills          # Claude Code  -> .claude/skills/
+npx @playwright/cli@latest install --skills=agents   # Codex/others -> .agents/skills/
 ```
+
+It reuses an installed Chrome, so there is no separate browser download. If you
+work through the Playwright MCP server instead, the same ladder applies — only
+the command syntax differs.
+
+## 1. Identify what changed
+
+You normally run this skill **before committing**, so the branch diff is empty
+and only the working tree holds your change. Look at both:
+
+```bash
+git status --short                     # uncommitted work — usually the real answer
+git diff                               # unstaged changes
+git diff --cached                      # staged changes
+git diff --stat origin/main...HEAD     # already-committed work on this branch
+```
+
+If `git status --short` and `git diff` are both empty _and_ the branch diff is
+empty, you have nothing to verify — stop and ask what you were meant to check.
 
 From the diff, list the affected surfaces: routes, screens, components, forms,
 API calls. You will verify these and nothing else — scope the work to the change.
@@ -65,25 +86,55 @@ Deduplicate into one numbered list. That list is your test plan.
 Open the running application:
 
 ```bash
-playwright-cli open http://localhost:5173
-playwright-cli snapshot          # accessibility tree, gives element refs
+playwright-cli open http://localhost:5173/          # use the app's real base path
+playwright-cli snapshot                             # accessibility tree
+```
+
+`snapshot` prints refs like `[ref=e13]`, and **every command that targets an
+element takes that ref, not its text**:
+
+```bash
+playwright-cli click e13                 # correct
+playwright-cli click "Show paid bills"   # error: does not match any elements
+playwright-cli find "Show paid"          # use find to locate, then click its ref
 ```
 
 Work down this ladder. Every rung you can answer with a measurement, you MUST
 answer with a measurement. Visual judgment is the last resort, never the first.
 
-| Question | Command | Kind |
-|---|---|---|
-| Did anything throw? | `playwright-cli console` | deterministic |
-| Did a request fail? | `playwright-cli requests`, `request <n>` | deterministic |
-| What did the API return? | `playwright-cli response-body <n>` | deterministic |
-| Is this element the right size / font / spacing? | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h: r.height, w: r.width, fontSize: s.fontSize, gap: s.gap}; }" <ref>` | deterministic |
-| Does it work on a phone? | `playwright-cli resize 375 812` then re-measure | deterministic |
-| Is the control reachable and named? | `playwright-cli snapshot` — check role and accessible name | deterministic |
-| How does it behave offline / on a 500? | `playwright-cli network-state-set offline`; for a forced error see the note below | deterministic |
-| Does the page *look* right? | `playwright-cli screenshot` | judgment — last |
+| Question                                         | Command                                                                                                                                                                           | Kind            |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
+| Did anything throw?                              | `playwright-cli console`                                                                                                                                                          | deterministic   |
+| Did a request fail?                              | `playwright-cli requests`, `request <n>`                                                                                                                                          | deterministic   |
+| What did the API return?                         | `playwright-cli response-body <n>`                                                                                                                                                | deterministic   |
+| Is this element the right size / font / spacing? | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h: r.height, w: r.width, fontSize: s.fontSize, gap: s.gap}; }" <ref>` | deterministic   |
+| Does it work on a phone?                         | `playwright-cli resize 375 812` then re-measure                                                                                                                                   | deterministic   |
+| Is the control reachable and named?              | `playwright-cli snapshot` — check role and accessible name                                                                                                                        | deterministic   |
+| How does it behave offline / on a 500?           | `playwright-cli network-state-set offline`; for a forced error see the note below                                                                                                 | deterministic   |
+| Does the page _look_ right?                      | `playwright-cli screenshot`                                                                                                                                                       | judgment — last |
 
 Never ask a model whether a button is 44px tall. Measure it.
+
+### Four traps that cost people the most time
+
+**Key names are case-sensitive.** `playwright-cli press tab` does nothing at all
+— no error, exit code 0, focus unchanged. `press Tab` works. Use Playwright key
+names: `Tab`, `Enter`, `Space`, `ArrowLeft`. Before keyboard testing, click or
+focus an element first; a freshly opened page leaves focus somewhere useless.
+
+**`requests` is empty right after `goto`.** The list fills as the page makes
+calls, so reload once before reading it, and pass `--static` if you want more
+than XHR/fetch entries.
+
+**A dev server double-fires every request.** React StrictMode mounts effects
+twice in development, so each API call appears twice in `requests`. That is the
+dev server, not a defect. Confirm against a production build before reporting a
+duplicate request — unlike a real double-submit, which fires from one user
+action and reaches the same endpoint twice with the same payload.
+
+**A dev server URL is not the deployed URL.** If the app is built with a base
+path, `localhost:5173` may redirect while `npm run preview` and the deployed
+site need the full path. Check the URL bar after `open`.
 
 ### Where `route` works, and where it silently does not
 
@@ -96,15 +147,14 @@ may conclude the error path works when it was never exercised.
 
 Verified behaviour on a page with a service worker mocking `/api/bills`:
 
-| Target | Result |
-|---|---|
+| Target                                           | Result                               |
+| ------------------------------------------------ | ------------------------------------ |
 | `route "**/api/bills"` — path the worker handles | route ignored, worker's 200 returned |
-| `route "**/api/other"` — path the worker ignores | route applied, forced 500 returned |
+| `route "**/api/other"` — path the worker ignores | route applied, forced 500 returned   |
 
 So: to test an error path in an app with a service worker, make the **worker**
 return the error, or unregister it first. Always confirm the status you got
 (`playwright-cli requests`) rather than assuming the route took effect.
-
 
 ## 5. Capture evidence at the moment of failure
 
@@ -148,14 +198,14 @@ those pass today and break next sprint.
 
 When a test fails, classify the cause before changing anything:
 
-| Cause | Allowed action |
-|---|---|
-| Locator moved, selector stale, waiting was flaky | Repair the test |
-| Implementation does not match the spec | Fix the implementation |
-| The spec itself looks wrong or outdated | **Stop. Report the discrepancy. A human decides.** |
+| Cause                                            | Allowed action                                     |
+| ------------------------------------------------ | -------------------------------------------------- |
+| Locator moved, selector stale, waiting was flaky | Repair the test                                    |
+| Implementation does not match the spec           | Fix the implementation                             |
+| The spec itself looks wrong or outdated          | **Stop. Report the discrepancy. A human decides.** |
 
-You may repair *how the test interacts with the application*. You may not
-redefine *what the application is expected to do*. Changing an expected value so
+You may repair _how the test interacts with the application_. You may not
+redefine _what the application is expected to do_. Changing an expected value so
 the suite turns green is not healing — it is deleting the requirement.
 
 ## 8. Produce the handoff

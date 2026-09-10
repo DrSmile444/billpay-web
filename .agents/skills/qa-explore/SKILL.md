@@ -17,11 +17,31 @@ Two rules govern everything below:
 - **Measure before you judge.** If a browser API can answer the question, a
   model's opinion is not evidence.
 
+## 0. Install the browser driver
+
+```bash
+npx @playwright/cli@latest install --skills          # Claude Code
+npx @playwright/cli@latest install --skills=agents   # Codex/others
+```
+
+It reuses an installed Chrome — no separate browser download. If you use the
+Playwright MCP server instead, the ladder below is identical; only the syntax
+differs.
+
 ## 1. Learn the application before hunting
 
 ```bash
 playwright-cli open <url>
 playwright-cli snapshot
+```
+
+`snapshot` prints refs like `[ref=e13]`. **Every element command takes the ref,
+not the text:**
+
+```bash
+playwright-cli click e13                 # correct
+playwright-cli click "Pay bill"          # error: does not match any elements
+playwright-cli find "Pay"                # locate first, then click the ref
 ```
 
 Identify the core user journeys — the three to five flows that, if broken, make
@@ -47,20 +67,34 @@ Merge into one numbered plan. Then execute it — do not keep re-planning.
 
 Work top-down. Everything you can measure, measure. Vision is the last rung.
 
-| Question | Command |
-|---|---|
-| Did anything throw? | `playwright-cli console` |
-| Did a request fail, or fire twice? | `playwright-cli requests` then `request <n>` |
-| What did the server actually return? | `playwright-cli response-body <n>` |
-| Size, font, spacing, colour of an element | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h:r.height, w:r.width, fontSize:s.fontSize, gap:s.gap}; }" <ref>` |
-| Is the control reachable and correctly named? | `playwright-cli snapshot` — check role and accessible name |
-| Does it survive a phone viewport? | `playwright-cli resize 375 812` then re-measure |
-| What happens on a server error? | `playwright-cli route "<path>" --status 500` — see the note below |
-| What happens with no network? | `playwright-cli network-state-set offline` |
-| Does the page look right? | `playwright-cli screenshot` — judgment, last resort |
+| Question                                      | Command                                                                                                                                                                       |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Did anything throw?                           | `playwright-cli console`                                                                                                                                                      |
+| Did a request fail, or fire twice?            | `playwright-cli requests` then `request <n>`                                                                                                                                  |
+| What did the server actually return?          | `playwright-cli response-body <n>`                                                                                                                                            |
+| Size, font, spacing, colour of an element     | `playwright-cli eval "el => { const r = el.getBoundingClientRect(); const s = getComputedStyle(el); return {h:r.height, w:r.width, fontSize:s.fontSize, gap:s.gap}; }" <ref>` |
+| Is the control reachable and correctly named? | `playwright-cli snapshot` — check role and accessible name                                                                                                                    |
+| Does it survive a phone viewport?             | `playwright-cli resize 375 812` then re-measure                                                                                                                               |
+| What happens on a server error?               | `playwright-cli route "<path>" --status 500` — see the note below                                                                                                             |
+| What happens with no network?                 | `playwright-cli network-state-set offline`                                                                                                                                    |
+| Does the page look right?                     | `playwright-cli screenshot` — judgment, last resort                                                                                                                           |
 
 A misaligned button is a measurement, not an impression. A duplicated request is
 a network entry, not a suspicion.
+
+### Traps that will cost you time
+
+**Key names are case-sensitive.** `press tab` does nothing — no error, exit 0.
+`press Tab` works. Use `Tab`, `Enter`, `Space`, `ArrowLeft`. Focus an element
+before keyboard testing; a freshly opened page starts with focus nowhere useful.
+
+**`requests` is empty right after `goto`.** Reload once before reading it, and
+pass `--static` for anything beyond XHR/fetch.
+
+**Development servers double-fire requests.** React StrictMode runs effects
+twice in dev, so every API call shows up twice. That is the dev server, not a
+defect — do not file it. A real double-submit differs: one user action, two
+identical requests to the same endpoint.
 
 ### Where `route` works, and where it silently does not
 
@@ -73,15 +107,14 @@ may conclude the error path works when it was never exercised.
 
 Verified behaviour on a page with a service worker mocking `/api/bills`:
 
-| Target | Result |
-|---|---|
+| Target                                           | Result                               |
+| ------------------------------------------------ | ------------------------------------ |
 | `route "**/api/bills"` — path the worker handles | route ignored, worker's 200 returned |
-| `route "**/api/other"` — path the worker ignores | route applied, forced 500 returned |
+| `route "**/api/other"` — path the worker ignores | route applied, forced 500 returned   |
 
 So: to test an error path in an app with a service worker, make the **worker**
 return the error, or unregister it first. Always confirm the status you got
 (`playwright-cli requests`) rather than assuming the route took effect.
-
 
 ## 4. Prove it before you write it up
 

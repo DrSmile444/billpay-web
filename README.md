@@ -31,9 +31,9 @@ open. For Codex, add it with `codex mcp`.
 
 **Workshop skills** ship in this repo for both agents:
 
-| Skill | Use it for |
-| --- | --- |
-| `qa-explore` | Testing the running app: explore, prove a defect, capture evidence, write the ticket |
+| Skill          | Use it for                                                                             |
+| -------------- | -------------------------------------------------------------------------------------- |
+| `qa-explore`   | Testing the running app: explore, prove a defect, capture evidence, write the ticket   |
 | `ready-for-qa` | Before handing your own change to QA: spec check, runtime verification, handoff report |
 
 ## What it is
