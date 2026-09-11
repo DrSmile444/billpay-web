@@ -82,3 +82,4 @@ rules:
     - "Include an explicit task to run `npm run lint` and `npm run build` and record that both pass."
     - "Keep tasks to at most ~2 hours of work each; split anything larger."
     - "Do not add a task that fixes an unrelated pre-existing defect. Log it instead."
+    - "If the change adds or modifies application behaviour, include a task to add or update automated tests (Vitest/React Testing Library) for that behaviour and to confirm at least 80% statement coverage (`npm run test:coverage`) on the files the change touches. Order this task before the final ready-for-qa task."
