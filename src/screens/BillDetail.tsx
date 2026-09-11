@@ -66,10 +66,7 @@ export default function BillDetail() {
         <h2 className="section-title">Recipient</h2>
         <dl className="kv">
           <dt>Name</dt>
-          <dd
-            data-testid="recipient-name"
-            dangerouslySetInnerHTML={{ __html: bill.recipient.name }}
-          />
+          <dd data-testid="recipient-name">{bill.recipient.name}</dd>
           <dt>Email</dt>
           <dd>{bill.recipient.email}</dd>
           <dt>Recipient id</dt>
