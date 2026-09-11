@@ -55,9 +55,15 @@ context: |
   no script runs it. The real linter is ESLint. Do not invent an `npm run
   oxlint` gate.
 
-  Browser verification is the real gate. Playwright MCP is preconfigured in
-  .mcp.json; the playwright-cli binary is NOT installed by default — get it with
-  `npx @playwright/cli@latest install --skills`.
+  Browser verification is the real gate, and it runs through the Playwright MCP
+  server, which is preconfigured in .mcp.json for Claude Code. Codex keeps its
+  MCP config globally and does not read .mcp.json, so it needs
+  `codex mcp add playwright -- npx -y @playwright/mcp@latest` once.
+
+  The verification itself is not improvised per change: it follows the
+  ready-for-qa skill in .claude/skills/ready-for-qa/, which walks the acceptance
+  scenarios in a real browser, checks console, network, measurements,
+  accessibility and a phone viewport, and ends with a handoff report.
 
 rules:
   proposal:
