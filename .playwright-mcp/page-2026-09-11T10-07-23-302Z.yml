@@ -1,0 +1,40 @@
+- generic [ref=f1e264]:
+  - generic [ref=f1e265]:
+    - heading "Bill" [level=1] [ref=f1e266]
+    - generic [ref=f1e267]: unpaid
+  - generic [ref=f1e268]:
+    - heading "Recipient" [level=2] [ref=f1e269]
+    - generic [ref=f1e270]:
+      - term [ref=f1e271]: Name
+      - definition [ref=f1e272]
+      - term [ref=f1e274]: Email
+      - definition [ref=f1e275]: not-an-email
+      - term [ref=f1e276]: Recipient id
+      - definition [ref=f1e277]: c930f7a5-4b73-461f-b3f8-07c962b74f3f
+  - generic [ref=f1e278]:
+    - heading "Line items" [level=2] [ref=f1e279]
+    - table [ref=f1e280]:
+      - rowgroup [ref=f1e281]:
+        - row [ref=f1e282]:
+          - columnheader "Description" [ref=f1e283]
+          - columnheader "Qty" [ref=f1e284]
+          - columnheader "Amount" [ref=f1e285]
+      - rowgroup [ref=f1e286]:
+        - row [ref=f1e287]:
+          - cell "<img src=x onerror=\"window.__xssFired2=(window.__xssFired2||0)+1\">" [ref=f1e288]
+          - cell "1" [ref=f1e289]
+          - cell "100,00 грн" [ref=f1e290]
+        - row [ref=f1e291]:
+          - cell [ref=f1e292]:
+            - strong [ref=f1e293]: Total
+          - cell [ref=f1e294]
+          - cell [ref=f1e295]:
+            - strong [ref=f1e296]: 100,00 грн
+    - paragraph [ref=f1e297]: Created 9/11/2026, 1:06:50 PM
+  - generic [ref=f1e298]:
+    - heading "Payment history" [level=2] [ref=f1e299]
+    - generic [ref=f1e300]: Loading history…
+  - generic [ref=f1e303]:
+    - button "Pay 100,00 грн" [ref=f1e304] [cursor=pointer]
+    - link "Back to bills" [ref=f1e305] [cursor=pointer]:
+      - /url: "#/"

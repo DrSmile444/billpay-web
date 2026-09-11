@@ -16,22 +16,22 @@ cd billpay-web
 npm install          # only needed for the developer exercise; QA testing needs the live URL only
 ```
 
-**Browser control for your agent.** Install the official Playwright skill, which teaches
-the agent to drive a real browser, read the console and network, and measure elements:
+**Browser control for your agent.** The workshop runs on the Playwright MCP server,
+which gives the agent a real browser: it can navigate, read the accessibility tree,
+inspect the console and the network, measure elements and take screenshots.
 
-```bash
-npx @playwright/cli@latest install --skills          # Claude Code  -> .claude/skills/
-npx @playwright/cli@latest install --skills=agents   # Codex/others -> .agents/skills/
-```
-
-It reuses an installed Chrome, so there is no separate browser download.
-
-**Playwright MCP.** Claude Code picks it up from the committed `.mcp.json` when you
-open the repo — nothing to do. **Codex does not read `.mcp.json`**; its MCP config is
-global, so add the server once:
+Claude Code picks the server up from the committed `.mcp.json` when you open the
+repo — nothing to do. **Codex does not read `.mcp.json`**; its MCP config is global,
+so add the server once:
 
 ```bash
 codex mcp add playwright -- npx -y @playwright/mcp@latest
+```
+
+If you need it in Claude Code outside this repo:
+
+```bash
+claude mcp add playwright -- npx -y @playwright/mcp@latest
 ```
 
 **Workshop skills** ship in this repo for both agents:

@@ -1,0 +1,43 @@
+- generic [ref=e4]:
+  - generic [ref=e5]:
+    - heading "Bills" [level=1] [ref=e6]
+    - generic [ref=e7]:
+      - button [ref=e8] [cursor=pointer]
+      - link "New bill" [ref=e11] [cursor=pointer]:
+        - /url: "#/bills/new"
+  - list [ref=e12]:
+    - listitem [ref=e13]:
+      - checkbox "Select bill for billing@kyivenergo.example" [checked] [active] [ref=e14]
+      - generic [ref=e15]:
+        - link "Kyivenergo Utilities" [ref=e16] [cursor=pointer]:
+          - /url: "#/bills/9d3f1b22-6c74-4a1f-9c8e-1f2a3b4c5d6e"
+        - generic [ref=e17]: billing@kyivenergo.example · created 8/30/2026, 12:12:00 PM
+      - generic [ref=e18]: unpaid
+      - strong [ref=e19]: 4 820,75 грн
+    - listitem [ref=e20]:
+      - checkbox "Select bill for ar@northwind.example" [ref=e21]
+      - generic [ref=e22]:
+        - link "Northwind Hosting" [ref=e23] [cursor=pointer]:
+          - /url: "#/bills/2a7e5c10-88b4-4d2e-a9f1-7c6b5a4d3e2f"
+        - generic [ref=e24]: ar@northwind.example · created 9/1/2026, 5:40:00 PM
+      - generic [ref=e25]: unpaid
+      - strong [ref=e26]: $1,234.50
+    - listitem [ref=e27]:
+      - checkbox "Select bill for office@acme-cleaning.example" [ref=e28]
+      - generic [ref=e29]:
+        - link "Acme Cleaning <img src=x onerror=\"window.__xssFired=(window.__xssFired||0)+1\">" [ref=e30] [cursor=pointer]:
+          - /url: "#/bills/5b1c9d4e-3f2a-4e6b-8a7c-0d1e2f3a4b5c"
+        - generic [ref=e31]: office@acme-cleaning.example · created 9/3/2026, 11:05:00 AM
+      - generic [ref=e32]: unpaid
+      - strong [ref=e33]: 999,90 грн
+    - listitem [ref=e34]:
+      - checkbox "Select bill for invoices@dniprovoda.example" [ref=e35]
+      - generic [ref=e36]:
+        - link "Dnipro Water Supply" [ref=e37] [cursor=pointer]:
+          - /url: "#/bills/7e4d2c81-5a6b-4f7c-8d9e-1a2b3c4d5e6f"
+        - generic [ref=e38]: invoices@dniprovoda.example · created 9/9/2026, 1:00:00 PM
+      - generic [ref=e39]: paid
+      - strong [ref=e40]: 320,00 грн
+  - generic [ref=e41]:
+    - generic [ref=e42]: "Selected: 1"
+    - generic [ref=e43]: 1 820,75 грн

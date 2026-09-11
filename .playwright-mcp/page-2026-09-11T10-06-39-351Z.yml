@@ -1,0 +1,26 @@
+- generic [ref=f1e240]:
+  - heading "New bill" [level=1] [ref=f1e242]
+  - generic [ref=f1e243]:
+    - heading "Recipient" [level=2] [ref=f1e244]
+    - generic [ref=f1e245]:
+      - generic [ref=f1e246]: Name
+      - textbox "Name" [ref=f1e247]
+      - generic [ref=f1e262]: Recipient name is required
+    - generic [ref=f1e248]:
+      - generic [ref=f1e249]: Email
+      - textbox "Email" [ref=f1e250]
+      - generic [ref=f1e263]: Email is required
+  - generic [ref=f1e251]:
+    - heading "Amount" [level=2] [ref=f1e252]
+    - generic [ref=f1e253]:
+      - generic [ref=f1e254]: Amount
+      - textbox "Amount" [ref=f1e255]: "100.00"
+    - generic [ref=f1e256]:
+      - generic [ref=f1e257]: Currency
+      - combobox "Currency" [ref=f1e258]:
+        - option "UAH" [selected]
+        - option "USD"
+  - generic [ref=f1e259]:
+    - button "Create bill" [active] [ref=f1e260] [cursor=pointer]
+    - link "Cancel" [ref=f1e261] [cursor=pointer]:
+      - /url: "#/"

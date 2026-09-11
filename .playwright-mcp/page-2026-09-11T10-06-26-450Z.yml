@@ -1,0 +1,22 @@
+- generic [ref=f1e174]:
+  - generic [ref=f1e175]:
+    - heading "Receipt" [level=1] [ref=f1e176]
+    - generic [ref=f1e177]: paid
+  - generic [ref=f1e178]:
+    - heading "Payment confirmation" [level=2] [ref=f1e179]
+    - generic [ref=f1e180]:
+      - term [ref=f1e181]: Receipt number
+      - definition [ref=f1e182]: RCPT-2026-000143
+      - term [ref=f1e183]: Recipient
+      - definition [ref=f1e184]: Kyivenergo Utilities
+      - term [ref=f1e185]: Amount
+      - definition [ref=f1e186]: 4 820,75 грн
+      - term [ref=f1e187]: Paid on
+      - definition [ref=f1e188]: 2026-09-11
+      - term [ref=f1e189]: Bill id
+      - definition [ref=f1e190]: 9d3f1b22-6c74-4a1f-9c8e-1f2a3b4c5d6e
+  - generic [ref=f1e191]:
+    - link "Back to bill" [ref=f1e192] [cursor=pointer]:
+      - /url: "#/bills/9d3f1b22-6c74-4a1f-9c8e-1f2a3b4c5d6e"
+    - link "All bills" [ref=f1e193] [cursor=pointer]:
+      - /url: "#/"
