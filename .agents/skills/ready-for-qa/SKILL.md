@@ -92,6 +92,10 @@ Never ask a model whether a button is 44px tall. Measure it.
 The comparison rung is the one people skip and the one that pays best: read what
 the endpoint returned, read what the screen renders, diff them field by field.
 
+**Always give `browser_take_screenshot` a path under `.playwright-mcp/`.** A bare
+filename is written relative to the project root and will silently overwrite a
+tracked file of the same name.
+
 **Traps:** key names are case-sensitive (`Tab`, not `tab` — the lowercase form
 fails silently); navigation resets the viewport, so navigate before you resize;
 the network list is empty right after a navigation, reload once first; a dev
@@ -110,7 +114,12 @@ Separate observation from hypothesis, and label which is which.
 ## 6. Fix, then prove it stays fixed
 
 Fix the implementation, re-run the failing check, then turn the failure into a
-test so it cannot come back. You walked the scenario with the browser tools, so
+test so it cannot come back.
+
+**If the project has no test runner, do not add one.** Record the reproduction
+steps and the evidence in the handoff instead, and say plainly that no automated
+test guards this yet. Installing a runner mid-change is a separate decision and
+not yours to make here. You walked the scenario with the browser tools, so
 you know the page's real structure — write the test from what you saw, not from
 what you assume the markup to be.
 

@@ -94,6 +94,10 @@ the endpoint returned, read what the screen shows, compare field by field. Wrong
 totals, off-by-one dates, values stored at a precision the UI hides — all of them
 surface there and nowhere else.
 
+**Always give `browser_take_screenshot` a path under `.playwright-mcp/`.** A bare
+filename writes to the project root and silently overwrites a tracked file of the
+same name.
+
 ### Traps that will cost you time
 
 **Key names are case-sensitive.** `browser_press_key` with `tab` does nothing and

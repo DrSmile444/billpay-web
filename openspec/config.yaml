@@ -76,7 +76,7 @@ rules:
   specs:
     - "Every requirement MUST have at least one acceptance scenario written as an explicit Given / When / Then block. A requirement with no Given-When-Then scenario is incomplete and must be rejected."
     - "Write scenarios against observable browser behaviour (what is rendered, what request is sent, what status comes back) — not against internal function calls."
-    - "Cover the empty, loading and error state of any list or fetch the requirement introduces."
+    - "Cover the empty, loading and error state of any list or fetch the requirement introduces, but only where the running app can actually reach that state. If a state is unreachable in this repo (there is no delete endpoint, the mock delay is too short to observe, some fetches have no failure path), say so in the spec instead of writing a scenario nobody can verify."
   tasks:
     - "The final task of every change MUST be: run the repo's ready-for-qa skill (.claude/skills/ready-for-qa/SKILL.md) against a running dev server (npm run dev) and produce its handoff report. A change is not done until that report exists and reports no unresolved failures."
     - "Include an explicit task to run `npm run lint` and `npm run build` and record that both pass."
